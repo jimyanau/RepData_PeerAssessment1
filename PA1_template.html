@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title>Reproducible Research: Peer Assessment 1</title>
+
+<script src="PA1_template_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="PA1_template_files/bootstrap-3.3.1/css/bootstrap.min.css" rel="stylesheet" />
+<script src="PA1_template_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="PA1_template_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="PA1_template_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="PA1_template_files/highlight/default.css"
+      type="text/css" />
+<script src="PA1_template_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Reproducible Research: Peer Assessment 1</h1>
+</div>
+
+
+<div id="loading-and-preprocessing-the-data" class="section level2">
+<h2>1) Loading and preprocessing the data</h2>
+<p>The first step of this assignment is to load the data file “activity.csv”.</p>
+<pre class="r"><code>### Download data if data doesn&#39;t exists:
+  DataFileName &lt;- &quot;repdata-data-activity.zip&quot;
+  
+  if (!file.exists(DataFileName)){
+    fileURL &lt;- &quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;
+    download.file(fileURL, DataFileName)
+  }  
+
+### Unzip data if data file doesn&#39;t exists:
+  if (!file.exists(&quot;activity.csv&quot;)) { 
+    unzip(DataFileName) 
+  }
+
+### Load data from source file
+  raw.data &lt;- read.csv(&quot;activity.csv&quot;, head=TRUE)</code></pre>
+<p>After loading data from source file, we will remove N/A values and transfer the “date” field format to a date format.</p>
+<pre class="r"><code>### Remove NA values from &quot;steps&quot; filed
+  activity.data &lt;- subset(raw.data, !is.na(raw.data$steps))
+  
+### Convert &quot;date&quot;&quot; field from factor to a date format
+  activity.data$date &lt;- as.Date(activity.data$date)</code></pre>
+<hr />
+</div>
+<div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
+<h2>2) What is mean total number of steps taken per day?</h2>
+<p>To answer this question, we will process the original data to obtain the total step counts of each day.</p>
+<pre class="r"><code>  ### Check if required package is loaded. If required packaged is not loaded, load it.
+  if (!require(&quot;ggplot2&quot;)) install.packages(&quot;ggplot2&quot;)</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>  if (!require(&quot;reshape2&quot;)) install.packages(&quot;reshape2&quot;)</code></pre>
+<pre><code>## Loading required package: reshape2</code></pre>
+<pre class="r"><code>  ### calculate the total number of steps per day
+  total.steps.per.day &lt;- melt(activity.data, id.vars=&quot;date&quot;, measure.vars=&quot;steps&quot;)
+  total.steps.per.day &lt;- dcast(total.steps.per.day, date ~ variable, sum)</code></pre>
+<p>Next, we generate a histogram of the total step counts of each day to show the distrubution of total steps.</p>
+<pre class="r"><code>  ### plot histogram
+  g2 &lt;- ggplot(total.steps.per.day, aes(total.steps.per.day$steps)) 
+  g2 &lt;- g2 +  geom_histogram(fill = &quot;green&quot;, alpha = 0.9) +
+    labs(title=&quot;Histogram of the Total Number of Steps Taken Each Day&quot;) +
+    labs(x=&quot;Daily Total Steps&quot;, y=&quot;Frequency&quot;) 
+  g2</code></pre>
+<pre><code>## stat_bin: binwidth defaulted to range/30. Use &#39;binwidth = x&#39; to adjust this.</code></pre>
+<p><img src="PA1_template_files/figure-html/unnamed-chunk-4-1.png" /></p>
+<p>Next, we calculate the mean and median of the total steps numbers takden each day.</p>
+<pre class="r"><code>  mean(total.steps.per.day$steps)</code></pre>
+<pre><code>## [1] 10766.19</code></pre>
+<pre class="r"><code>  median(total.steps.per.day$steps)</code></pre>
+<pre><code>## [1] 10765</code></pre>
+<hr />
+</div>
+<div id="what-is-the-average-daily-activity-pattern" class="section level2">
+<h2>3) What is the average daily activity pattern?</h2>
+<p>To answer this question, we process the original data and form a new data frame with the average steps at a 5 minute interval.</p>
+<pre class="r"><code>  ave.steps.int_5 &lt;- tapply(activity.data$steps, activity.data$interval, mean, na.rm=TRUE, simplify=T)
+  data.frame.int_5 &lt;- data.frame(interval=as.integer(names(ave.steps.int_5)), avg_steps=ave.steps.int_5)</code></pre>
+<p>Next, we will plot the average steps across the whole day at a 5-minute interval to see the daily acitivity pattern.</p>
+<pre class="r"><code>  g3 &lt;- ggplot(data.frame.int_5, aes(interval, avg_steps)) 
+  g3 &lt;- g3 +  geom_line() +
+    labs(title=&quot;Daily Average Steps At A 5-Minute Interval&quot;) +
+    labs(x=&quot;Intervals (minute)&quot;, y=&quot;Average Steps&quot;) 
+  g3</code></pre>
+</div>
+<div id="section" class="section level2">
+<h2><img src="PA1_template_files/figure-html/unnamed-chunk-7-1.png" /></h2>
+</div>
+<div id="imputing-missing-values" class="section level2">
+<h2>4) Imputing missing values</h2>
+<p>To impute missing values, we need to calculate the amount of missing value of original data.</p>
+<pre class="r"><code>  sum(is.na(raw.data$steps))</code></pre>
+<pre><code>## [1] 2304</code></pre>
+<p>So there were 2304 rows of missing data from the original data.</p>
+<p>Then we are going to impute those missing data with the average steps of the same period of time from the data frame we generated at Section #3.</p>
+<pre class="r"><code>  index_list &lt;- is.na(raw.data$steps)
+  imputed.data &lt;- raw.data
+  imputed.data$steps[index_list] &lt;- data.frame.int_5$avg_steps[as.character(imputed.data$interval[index_list])]</code></pre>
+<p>Next, we created a new dataset with imputed data.</p>
+<pre class="r"><code>  new.total.daily.step &lt;- melt(imputed.data, id.vars=&quot;date&quot;, measure.vars=&quot;steps&quot;)
+  new.total.daily.step &lt;- dcast(new.total.daily.step, date ~ variable, sum)</code></pre>
+<p>Next, we will plot a new histogram with imputed data to show the distribution of new dataset.</p>
+<pre class="r"><code>  g4 &lt;- ggplot(new.total.daily.step, aes(new.total.daily.step$steps)) 
+  g4 &lt;- g4 +  geom_histogram(fill = &quot;blue&quot;, alpha = 0.9) +
+    labs(title=&quot;Histogram of the Total Number of Steps Taken Each Day - Data Imputted&quot;) +
+    labs(x=&quot;Daily Total Steps&quot;, y=&quot;Frequency&quot;) 
+  g4</code></pre>
+<pre><code>## stat_bin: binwidth defaulted to range/30. Use &#39;binwidth = x&#39; to adjust this.</code></pre>
+<p><img src="PA1_template_files/figure-html/unnamed-chunk-11-1.png" /></p>
+<p>Next, we calculate the mean and median of the total steps numbers takden each day from the new dataset.</p>
+<pre class="r"><code>  mean(new.total.daily.step$steps)</code></pre>
+<pre><code>## [1] 10766.19</code></pre>
+<pre class="r"><code>  median(new.total.daily.step$steps)</code></pre>
+<pre><code>## [1] 10766.19</code></pre>
+<p>Comparing the distrubution, mean and median between original dataset and imputted dataset, there was no obvious change after imputing data. It was becasue we imputted the missing with the average step value of the same period of time from the original dataset.</p>
+<hr />
+</div>
+<div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
+<h2>5) Are there differences in activity patterns between weekdays and weekends?</h2>
+<p>To answer this question, we create a function to check whether the given date is a weekday or weekend day. Then we call sapply function to create a new column “Weekday” to the imputted dataset to indicate the weekday status of each given date.</p>
+<pre class="r"><code>  fun_check_weekday &lt;- function(date) {
+      weekday &lt;- weekdays(date)
+      if (weekday %in% c(&quot;Saturday&quot;, &quot;Sunday&quot;))
+          return(&quot;weekend&quot;)
+      else 
+          return(&quot;weekday&quot;)
+  }
+  
+  imputed.data2 &lt;- imputed.data
+  imputed.data2$date &lt;- as.Date(imputed.data2$date)
+  imputed.data2$weekday &lt;- sapply(imputed.data2$date, FUN=fun_check_weekday)</code></pre>
+<p>Next, we create a new dataset to contain the average steps with date and weekday fields.</p>
+<pre class="r"><code>  new.total.daily.step2 &lt;- melt(imputed.data2, id.vars=c(&quot;interval&quot;,&quot;weekday&quot;), measure.vars=&quot;steps&quot;)
+  new.total.daily.step2 &lt;- dcast(new.total.daily.step2, weekday + interval ~ variable, mean)</code></pre>
+<p>Then, we will make a plot with 2 panels to show the difference of daily average activities between weekdays and weekends.</p>
+<pre class="r"><code>  g5 &lt;- ggplot(new.total.daily.step2, aes(interval, steps)) + geom_line() + 
+    facet_grid(weekday ~ .) +
+    labs(title=&quot;Daily Average Steps Comparision: Weekday vs Weekend&quot;) +
+    labs(x=&quot;Intervals (minute)&quot;, y=&quot;Average Steps&quot;) 
+  g5</code></pre>
+<p><img src="PA1_template_files/figure-html/unnamed-chunk-15-1.png" /></p>
+</div>
+<div id="findings" class="section level2">
+<h2>Findings</h2>
+<ul>
+<li>According to the data, we can tell the activities raises earlier in weekdays than weekends.</li>
+<li>In general, weekends have higher activiti level compared with weekdays.</li>
+</ul>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
