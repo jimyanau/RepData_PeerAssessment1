@@ -8,10 +8,10 @@ keep_md: true
 
 ## Loading and preprocessing the data
   
-  # set working directory
+### set working directory
   setwd(wd)
         
-  ## Download data if data doesn't exists:
+## Download data if data doesn't exists:
   DataFileName <- "repdata-data-activity.zip"
   
   if (!file.exists(DataFileName)){
@@ -20,15 +20,15 @@ keep_md: true
   }  
 
 
-  #### Unzip data if data file doesn't exists:
+#### Unzip data if data file doesn't exists:
   if (!file.exists("activity.csv")) { 
     unzip(DataFileName) 
   }
 
-  #### Load data from file into R
+#### Load data from file into R
   activitydata <- read.csv("activity.csv", head=TRUE)
 
-  #### Convert date field from factor to a date format
+#### Convert date field from factor to a date format
   activitydata$date <- as.Date(activitydata$date)
 
   
