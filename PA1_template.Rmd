@@ -1,13 +1,37 @@
 ---
 title: "Reproducible Research: Peer Assessment 1"
 output: 
-  html_document:
-    keep_md: true
+html_document:
+keep_md: true
 ---
 
 
 ## Loading and preprocessing the data
+  
+  # set working directory
+  setwd(wd)
+        
+  ## Download data if data doesn't exists:
+  DataFileName <- "repdata-data-activity.zip"
+  
+  if (!file.exists(DataFileName)){
+    fileURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+    download.file(fileURL, DataFileName)
+  }  
 
+
+  #### Unzip data if data file doesn't exists:
+  if (!file.exists("activity.csv")) { 
+    unzip(DataFileName) 
+  }
+
+  #### Load data from file into R
+  activitydata <- read.csv("activity.csv", head=TRUE)
+
+  #### Convert date field from factor to a date format
+  activitydata$date <- as.Date(activitydata$date)
+
+  
 
 
 ## What is mean total number of steps taken per day?
